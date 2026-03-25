@@ -30,6 +30,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
       }
     });
 
+    db.run(`CREATE TABLE IF NOT EXISTS Routes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      start_origin TEXT,
+      end_destination TEXT
+    )`);
+
     db.run(`CREATE TABLE IF NOT EXISTS Buses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       bus_number TEXT UNIQUE NOT NULL,
@@ -38,13 +45,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
       capacity INTEGER,
       FOREIGN KEY (driver_id) REFERENCES Users(id),
       FOREIGN KEY (route_id) REFERENCES Routes(id)
-    )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS Routes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      start_origin TEXT,
-      end_destination TEXT
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS Stops (

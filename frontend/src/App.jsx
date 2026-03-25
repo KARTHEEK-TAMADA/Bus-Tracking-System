@@ -43,17 +43,17 @@ function App() {
               </div>
               
               {/* Right Menu Items */}
-              <div className="flex items-center gap-3 sm:gap-5">
-                {/* Coral Info Pill */}
-                <div className="bg-[#f27461] hover:bg-[#e06553] text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium text-sm sm:text-base tracking-wide shadow-sm transition-colors cursor-default hidden sm:flex items-center gap-2">
-                  <span>{user.name}</span>
-                  <span className="opacity-80 font-normal">| {user.role}</span>
+              <div className="flex items-center gap-2 sm:gap-5">
+                {/* User Info Pill */}
+                <div className="bg-[#f27461] hover:bg-[#e06553] text-white px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-full font-medium text-xs sm:text-base tracking-wide shadow-sm transition-colors cursor-default flex items-center gap-1 sm:gap-2">
+                  <span className="max-w-[80px] sm:max-w-none truncate">{user.name}</span>
+                  <span className="opacity-80 font-normal hidden xs:inline">| {user.role}</span>
                 </div>
                 
                 {/* Logout Button */}
                 <button 
                   onClick={handleLogout}
-                  className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full border-[1.5px] border-[#f27461] text-[#f27461] font-bold text-sm sm:text-base flex items-center justify-center hover:bg-[#f27461] hover:text-white transition-all active:scale-95"
+                  className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border-[1.5px] border-[#f27461] text-[#f27461] font-bold text-xs sm:text-base flex items-center justify-center hover:bg-[#f27461] hover:text-white transition-all active:scale-95"
                 >
                   Logout
                 </button>

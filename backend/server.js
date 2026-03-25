@@ -29,6 +29,8 @@ io.on('connection', (socket) => {
       driverSockets.set(driverId, { socketId: socket.id, busId });
       socketToDriver.set(socket.id, driverId);
       console.log(`Driver ${driverId} started trip for bus ${busId}`);
+      // Notify everyone that the bus is now live
+      io.emit('bus_location_update', { busId, status: 'live' });
     }
   });
 
@@ -38,28 +40,29 @@ io.on('connection', (socket) => {
     
     // Broadcast to all clients (Students & Admins)
     io.emit('bus_location_update', { busId, lat, lng, timestamp: Date.now() });
-
-    // Optional: Log to DB occasionally (not every second to save writes)
-    // db.run("INSERT INTO Bus_Location (bus_id, latitude, longitude) VALUES (?, ?, ?)", [busId, lat, lng]);
   });
 
-  socket.on('driver_stop_trip', () => {
-    const driverId = socketToDriver.get(socket.id);
+  const handleStopTrip = (socketId) => {
+    const driverId = socketToDriver.get(socketId);
     if (driverId) {
-      driverSockets.delete(driverId);
-      socketToDriver.delete(socket.id);
-      console.log(`Driver ${driverId} stopped trip`);
+      const session = driverSockets.get(driverId);
+      if (session) {
+        // Broadcast that the trip has ended
+        io.emit('bus_location_update', { busId: session.busId, status: 'ended' });
+        driverSockets.delete(driverId);
+      }
+      socketToDriver.delete(socketId);
+      console.log(`Driver ${driverId} trip session cleaned up`);
     }
+  };
+
+  socket.on('driver_stop_trip', () => {
+    handleStopTrip(socket.id);
   });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
-    const driverId = socketToDriver.get(socket.id);
-    if (driverId) {
-      driverSockets.delete(driverId);
-      socketToDriver.delete(socket.id);
-      console.log(`Driver ${driverId} disconnected`);
-    }
+    handleStopTrip(socket.id);
   });
 });
 

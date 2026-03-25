@@ -39,31 +39,31 @@ export default function Login({ onLogin }) {
     <div className="flex min-h-screen w-full">
       
       {/* Left Branding Panel - visible on all screens */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#1D3557] via-[#1D3557] to-[#E63946] p-12 flex-col justify-center items-start text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/vvit-buses.jpg')] bg-cover bg-center opacity-40 mix-blend-overlay"></div>
+      <div className="hidden lg:flex w-1/2 bg-[#1D3557] p-12 flex-col justify-center items-start text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
         
         <div className="relative z-10">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-3xl mb-8 shadow-xl border border-white/30">🚌</div>
-          <h1 className="text-4xl font-extrabold mb-4 leading-tight">VVIT<br/>Bus Tracking System</h1>
-          <p className="text-white/80 text-lg max-w-sm">Real-time GPS tracking for Vasireddy Venkatadri International Technological University campus buses.</p>
+          <div className="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-3xl mb-8 shadow-2xl border border-white/20">🚌</div>
+          <h1 className="text-5xl font-black mb-4 leading-tight tracking-tighter uppercase">VVIT<br/><span className="text-[#E63946]">BTS</span></h1>
+          <p className="text-white/70 text-lg max-w-sm font-medium leading-relaxed">The official real-time bus tracking system for VVIT students and staff.</p>
         </div>
         
-        <div className="absolute bottom-10 left-10 flex gap-2 animate-float">
-          <div className="w-3 h-3 rounded-full bg-[#E63946]"></div>
-          <div className="w-3 h-3 rounded-full bg-white/40"></div>
-          <div className="w-3 h-3 rounded-full bg-white/20"></div>
+        <div className="absolute bottom-10 left-10 flex gap-3">
+          <div className="w-12 h-1.5 rounded-full bg-[#E63946]"></div>
+          <div className="w-4 h-1.5 rounded-full bg-white/20"></div>
+          <div className="w-4 h-1.5 rounded-full bg-white/10"></div>
         </div>
       </div>
 
       {/* Right Form Section */}
-      <div className="w-full lg:w-1/2 p-6 sm:p-8 md:p-14 flex flex-col justify-center bg-white/70 backdrop-blur-xl">
+      <div className="w-full lg:w-1/2 p-6 sm:p-12 md:p-20 flex flex-col justify-center bg-slate-50 relative overflow-hidden">
         
-        {/* Mobile branding - Fix #13 */}
-        <div className="lg:hidden text-center mb-6">
-          <div className="flex justify-center mb-3">
-            <img src="/vvit-logo.svg" alt="VVIT Logo" className="h-16 object-contain" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+        {/* Mobile branding */}
+        <div className="lg:hidden text-center mb-10">
+          <div className="flex justify-center mb-4">
+             <div className="w-16 h-16 bg-[#1D3557] text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl border-4 border-white">🚌</div>
           </div>
-          <h2 className="text-lg font-bold text-[#1D3557]">VVIT Bus Tracking</h2>
+          <h2 className="text-3xl font-black text-[#1D3557] tracking-tighter uppercase">VVIT <span className="text-[#E63946]">BTS</span></h2>
         </div>
 
         {/* Desktop branding */}

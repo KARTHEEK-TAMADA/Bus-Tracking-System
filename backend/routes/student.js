@@ -1,7 +1,26 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('./auth.js');
 
 module.exports = function(db) {
   const router = express.Router();
+
+  // Middleware to check if user is logged in
+  const isAuth = (req, res, next) => {
+    const token = req.header('Authorization')?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Access denied. Please login.' });
+
+    try {
+      const verified = jwt.verify(token, JWT_SECRET);
+      req.user = verified;
+      next();
+    } catch (err) {
+      res.status(400).json({ error: 'Invalid token' });
+    }
+  };
+
+  // Apply auth to all student routes
+  router.use(isAuth);
 
   // Get all routes
   router.get('/routes', (req, res) => {

@@ -17,7 +17,8 @@ export default function DriverDashboard({ user }) {
       try {
         const token = localStorage.getItem('token');
         const res = await axios.get('/api/student/buses', { headers: { Authorization: `Bearer ${token}` } });
-        const myBuses = res.data.filter(b => b.driver_id === user.id);
+        // Use loose equality or cast to Number to avoid string/int mismatch
+        const myBuses = res.data.filter(b => b.driver_id == user.id);
         setBuses(myBuses);
       } catch (err) {
         console.error("Failed to fetch buses", err);

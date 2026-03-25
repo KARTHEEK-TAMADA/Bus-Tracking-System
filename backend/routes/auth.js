@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_bts_key_123';
 
-module.exports = function(db) {
+const authRouter = (db) => {
   const router = express.Router();
 
   // Basic signup for Students and Drivers (Admin is seeded or added manually)
@@ -58,4 +58,5 @@ module.exports = function(db) {
   return router;
 };
 
+module.exports = authRouter;
 module.exports.JWT_SECRET = JWT_SECRET;
