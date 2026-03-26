@@ -3,14 +3,15 @@ import axios from 'axios';
 
 export default function Login({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Student' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Student', driverCode: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError(''); // Fix #3: Clear error when switching modes
-    setFormData({ name: '', email: '', password: '', role: 'Student' });
+    setFormData({ name: '', email: '', password: '', role: 'Student', driverCode: '' });
   };
 
   const handleSubmit = async (e) => {
@@ -40,12 +41,12 @@ export default function Login({ onLogin }) {
       
       {/* Left Branding Panel - visible on all screens */}
       <div className="hidden lg:flex w-1/2 bg-[#1D3557] p-12 flex-col justify-center items-start text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1D3557] via-[#2A4B75] to-[#E63946] opacity-90"></div>
         
         <div className="relative z-10">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-3xl mb-8 shadow-2xl border border-white/20">🚌</div>
+          <div className="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-3xl mb-8 shadow-2xl border border-white/20 animate-float">🚌</div>
           <h1 className="text-5xl font-black mb-4 leading-tight tracking-tighter uppercase">VVIT<br/><span className="text-[#E63946]">BTS</span></h1>
-          <p className="text-white/70 text-lg max-w-sm font-medium leading-relaxed">The official real-time bus tracking system for VVIT students and staff.</p>
+          <p className="text-white/70 text-lg max-w-sm font-medium leading-relaxed">The live bus tracking app for VVIT students and staff.</p>
         </div>
         
         <div className="absolute bottom-10 left-10 flex gap-3">
@@ -61,21 +62,25 @@ export default function Login({ onLogin }) {
         {/* Mobile branding */}
         <div className="lg:hidden text-center mb-10">
           <div className="flex justify-center mb-4">
-             <div className="w-16 h-16 bg-[#1D3557] text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl border-4 border-white">🚌</div>
+            {!logoError ? (
+              <img src="/vvit-logo.svg" alt="VVIT Logo" className="h-20 object-contain" onError={() => setLogoError(true)} />
+            ) : (
+              <div className="w-16 h-16 bg-[#1D3557] text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl border-4 border-white">🚌</div>
+            )}
           </div>
-          <h2 className="text-3xl font-black text-[#1D3557] tracking-tighter uppercase">VVIT <span className="text-[#E63946]">BTS</span></h2>
+          <h2 className="text-3xl font-black text-[#1D3557] tracking-tighter uppercase mt-2">VVIT <span className="text-[#E63946]">BTS</span></h2>
         </div>
 
         {/* Desktop branding */}
         <div className="mb-8 text-center lg:text-left">
           <div className="hidden lg:flex justify-start mb-4">
-            <img src="/vvit-logo.svg" alt="VVIT Logo" className="h-20 object-contain" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+            {!logoError && <img src="/vvit-logo.svg" alt="VVIT Logo" className="h-20 object-contain" onError={() => setLogoError(true)} />}
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-[#1D3557] mb-1 leading-tight">
             Vasireddy Venkatadri<br/>International Technological University
           </h2>
           <p className="text-[#1D3557]/60 font-semibold text-sm">
-            {isLogin ? 'Bus Tracking — Login' : 'Bus Tracking — Register'}
+            {isLogin ? 'Login to your account' : 'Create an account'}
           </p>
         </div>
         
@@ -123,6 +128,15 @@ export default function Login({ onLogin }) {
                   <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
               </div>
+            </div>
+          )}
+          
+          {!isLogin && formData.role === 'Driver' && (
+            <div className="group animate-in fade-in duration-300">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Driver Admin Code</label>
+              <input type="text" required placeholder="Enter driver code"
+                className="w-full bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#E63946]/30 focus:border-[#E63946] transition-all font-medium text-slate-700"
+                value={formData.driverCode} onChange={e => setFormData({...formData, driverCode: e.target.value})} />
             </div>
           )}
           

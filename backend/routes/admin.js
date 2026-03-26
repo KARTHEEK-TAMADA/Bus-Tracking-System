@@ -59,10 +59,56 @@ module.exports = function(db) {
   // Buses Management
   router.post('/buses', (req, res) => {
     const { bus_number, driver_id, route_id, capacity } = req.body;
-    db.run("INSERT INTO Buses (bus_number, driver_id, route_id, capacity) VALUES (?, ?, ?, ?)",
-      [bus_number, driver_id, route_id, capacity], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, bus_number, driver_id, route_id, capacity });
+    
+    db.get("SELECT id FROM Buses WHERE bus_number = ?", [bus_number], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (row) return res.status(400).json({ error: 'Bus number already exists' });
+      
+      if (driver_id) {
+        db.get("SELECT role FROM Users WHERE id = ?", [driver_id], (err, user) => {
+          if (err) return res.status(500).json({ error: err.message });
+          if (!user || user.role !== 'Driver') return res.status(400).json({ error: 'Assigned user is not a Driver' });
+          insertBus();
+        });
+      } else {
+        insertBus();
+      }
+
+      function insertBus() {
+        db.run("INSERT INTO Buses (bus_number, driver_id, route_id, capacity) VALUES (?, ?, ?, ?)",
+          [bus_number, driver_id || null, route_id || null, Math.max(1, capacity)], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, bus_number, driver_id, route_id, capacity });
+        });
+      }
+    });
+  });
+
+  router.put('/buses/:id', (req, res) => {
+    const { bus_number, driver_id, route_id, capacity } = req.body;
+    const busId = req.params.id;
+
+    db.get("SELECT id FROM Buses WHERE bus_number = ? AND id != ?", [bus_number, busId], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (row) return res.status(400).json({ error: 'Bus number already exists' });
+
+      if (driver_id) {
+        db.get("SELECT role FROM Users WHERE id = ?", [driver_id], (err, user) => {
+          if (err) return res.status(500).json({ error: err.message });
+          if (!user || user.role !== 'Driver') return res.status(400).json({ error: 'Assigned user is not a Driver' });
+          updateBus();
+        });
+      } else {
+        updateBus();
+      }
+
+      function updateBus() {
+        db.run("UPDATE Buses SET bus_number=?, driver_id=?, route_id=?, capacity=? WHERE id=?",
+          [bus_number, driver_id || null, route_id || null, Math.max(1, capacity), busId], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Bus updated' });
+        });
+      }
     });
   });
 
@@ -86,11 +132,28 @@ module.exports = function(db) {
     });
   });
 
-  // Delete a route
+  // Delete a route (cascade)
   router.delete('/routes/:id', (req, res) => {
-    db.run("DELETE FROM Routes WHERE id = ?", [req.params.id], function(err) {
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION");
+      db.run("DELETE FROM Stops WHERE route_id = ?", [req.params.id]);
+      db.run("UPDATE Buses SET route_id = NULL WHERE route_id = ?", [req.params.id]);
+      db.run("DELETE FROM Routes WHERE id = ?", [req.params.id], function(err) {
+        if (err) {
+          db.run("ROLLBACK");
+          return res.status(500).json({ error: err.message });
+        }
+        db.run("COMMIT");
+        res.json({ message: 'Route deleted' });
+      });
+    });
+  });
+
+  // Delete a stop
+  router.delete('/stops/:id', (req, res) => {
+    db.run("DELETE FROM Stops WHERE id = ?", [req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: 'Route deleted' });
+      res.json({ message: 'Stop deleted' });
     });
   });
 

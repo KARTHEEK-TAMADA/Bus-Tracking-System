@@ -15,12 +15,17 @@ const authRouter = (db) => {
       return res.status(400).json({ error: 'All fields required' });
     }
 
-    if (password.length < 4) {
-      return res.status(400).json({ error: 'Password must be at least 4 characters' });
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
     if (!['Student', 'Driver'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role for registration' });
+    }
+
+    const driverSecret = process.env.DRIVER_SECRET_CODE || 'VVITBUS2026';
+    if (role === 'Driver' && req.body.driverCode !== driverSecret) {
+      return res.status(403).json({ error: 'Valid driver code required' });
     }
 
     try {

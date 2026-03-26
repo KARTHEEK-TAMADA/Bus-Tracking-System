@@ -9,6 +9,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error('Error opening database', err.message);
   } else {
     console.log('Connected to the SQLite database.');
+    db.run("PRAGMA foreign_keys = ON");
     
     // Create Tables
     db.run(`CREATE TABLE IF NOT EXISTS Users (
@@ -22,9 +23,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
         // Seed Admin User
         db.get("SELECT COUNT(*) as count FROM Users WHERE role = 'Admin'", async (err, row) => {
           if (row.count === 0) {
-            const hash = await bcrypt.hash('admin123', 10);
+            const adminPass = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123';
+            const hash = await bcrypt.hash(adminPass, 10);
             db.run("INSERT INTO Users (name, email, password, role) VALUES ('Admin User', 'admin@bts.com', ?, 'Admin')", [hash]);
-            console.log("Seeded default Admin user (admin@bts.com / admin123)");
+            console.log("Seeded default Admin user (admin@bts.com)");
           }
         });
       }

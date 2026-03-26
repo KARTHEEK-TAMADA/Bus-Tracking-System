@@ -137,7 +137,6 @@ select,
 button {
   min-width: 0;
   /* Prevent flex-shrink narrowing */
-  width: 100%;
   transition: all 0.3s ease;
 }
 

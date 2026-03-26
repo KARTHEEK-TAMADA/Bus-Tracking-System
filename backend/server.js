@@ -1,15 +1,24 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use('/api', apiLimiter);
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: process.env.FRONTEND_URL || '*' }
 });
 
 // Import DB
@@ -37,7 +46,7 @@ io.on('connection', (socket) => {
   // Driver sends live location
   socket.on('driver_update_location', (data) => {
     const { driverId, busId, lat, lng } = data;
-    
+
     // Broadcast to all clients (Students & Admins)
     io.emit('bus_location_update', { busId, lat, lng, timestamp: Date.now() });
   });
