@@ -12,7 +12,8 @@ export default function AdminDashboard() {
   // Form States
   const [routeForm, setRouteForm] = useState({ name: '', start_origin: '', end_destination: '' });
   const [busForm, setBusForm] = useState({ id: null, bus_number: '', driver_id: '', route_id: '', capacity: 40 });
-  const [stopForm, setStopForm] = useState({ route_id: '', name: '', latitude: '', longitude: '', sequence_order: '' });
+  const [stopForm, setStopForm] = useState({ route_id: '', name: '', sequence_order: '' });
+  const [geocoding, setGeocoding] = useState(false);
   
   const [selectedRouteForStops, setSelectedRouteForStops] = useState(null);
   const [routeStops, setRouteStops] = useState([]);
@@ -87,14 +88,17 @@ export default function AdminDashboard() {
   const handleAddStop = async (e) => {
     e.preventDefault();
     clearMessages();
+    setGeocoding(true);
     try {
       const config = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
       await axios.post('/api/admin/stops', { ...stopForm, route_id: selectedRouteForStops.id }, config);
-      setStopForm({ route_id: '', name: '', latitude: '', longitude: '', sequence_order: '' });
-      setSuccess('Stop added');
+      setStopForm({ route_id: '', name: '', sequence_order: '' });
+      setSuccess('Stop added (coordinates auto-detected)');
       fetchStops(selectedRouteForStops.id);
     } catch (err) {
-      setError('Failed to add stop');
+      setError(err.response?.data?.error || 'Failed to add stop. Could not find location.');
+    } finally {
+      setGeocoding(false);
     }
   };
 
@@ -263,13 +267,12 @@ export default function AdminDashboard() {
                   <h3 className="text-xl font-bold text-[#1D3557]">Stops for {selectedRouteForStops.name}</h3>
                 </div>
                 <form onSubmit={handleAddStop} className="space-y-3">
-                  <input placeholder="Stop Name" required className="white-input" value={stopForm.name} onChange={e => setStopForm({...stopForm, name: e.target.value})} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input placeholder="Lat" type="number" step="any" required className="white-input" value={stopForm.latitude} onChange={e => setStopForm({...stopForm, latitude: e.target.value})} />
-                    <input placeholder="Lng" type="number" step="any" required className="white-input" value={stopForm.longitude} onChange={e => setStopForm({...stopForm, longitude: e.target.value})} />
-                  </div>
+                  <input placeholder="Stop Name (e.g., Guntur Bus Stand)" required className="white-input" value={stopForm.name} onChange={e => setStopForm({...stopForm, name: e.target.value})} />
                   <input placeholder="Sequence Order (1, 2, 3...)" type="number" required className="white-input" value={stopForm.sequence_order} onChange={e => setStopForm({...stopForm, sequence_order: e.target.value})} />
-                  <button className="w-full bg-[#1D3557] text-white py-3 rounded-xl font-bold hover:bg-[#1D3557]/90 transition-all">Add Stop</button>
+                  <p className="text-[10px] text-slate-400 italic">📍 Coordinates will be auto-detected from the stop name</p>
+                  <button disabled={geocoding} className="w-full bg-[#1D3557] text-white py-3 rounded-xl font-bold hover:bg-[#1D3557]/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    {geocoding ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Detecting location...</>) : 'Add Stop'}
+                  </button>
                 </form>
                 <button onClick={() => setSelectedRouteForStops(null)} className="mt-4 text-sm text-slate-500 hover:underline">Done managing stops</button>
               </div>
