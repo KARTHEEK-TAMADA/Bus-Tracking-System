@@ -17,8 +17,7 @@ export default function DriverDashboard({ user }) {
       try {
         const token = localStorage.getItem('token');
         const res = await axios.get('/api/student/buses', { headers: { Authorization: `Bearer ${token}` } });
-        // Use loose equality or cast to Number to avoid string/int mismatch
-        const myBuses = res.data.filter(b => b.driver_id == user.id);
+        const myBuses = res.data.filter(b => b.driver_id === user.id);
         setBuses(myBuses);
       } catch (err) {
         console.error("Failed to fetch buses", err);
@@ -40,17 +39,14 @@ export default function DriverDashboard({ user }) {
       return;
     }
 
-    if (!window.confirm("Are you sure you want to start sharing your live location with students?")) return;
-
-    const socketUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : `http://${window.location.hostname}:5000`;
-    socketRef.current = io(socketUrl);
+    socketRef.current = io(window.location.origin.includes('localhost') ? 'http://localhost:5000' : '/');
     socketRef.current.emit('driver_start_trip', { driverId: user.id, busId: selectedBus });
     setIsTracking(true);
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        setLocation({ lat: latitude, lng: longitude, accuracy });
+        const { latitude, longitude } = position.coords;
+        setLocation({ lat: latitude, lng: longitude });
         socketRef.current.emit('driver_update_location', {
           driverId: user.id,
           busId: selectedBus,
@@ -87,7 +83,7 @@ export default function DriverDashboard({ user }) {
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-white mb-4 text-4xl mt-[-2rem]">
             👨‍✈️
           </div>
-          <h2 className="text-2xl font-bold text-[#1D3557] tracking-tight">Driver Screen</h2>
+          <h2 className="text-2xl font-bold text-[#1D3557] tracking-tight">Driver Terminal</h2>
           <p className="text-sm text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full mt-2">
             ID: {user.id} • {user.name}
           </p>
@@ -102,28 +98,21 @@ export default function DriverDashboard({ user }) {
         {!isTracking ? (
           <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Choose Your Bus</label>
-              {buses.length > 0 ? (
-                <select 
-                  className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl text-lg outline-none focus:ring-2 focus:ring-[#1D3557]/30 transition-all font-bold text-slate-700"
-                  value={selectedBus} onChange={(e) => { setSelectedBus(e.target.value); setError(''); }}
-                >
-                  <option value="" className="font-normal text-slate-500">-- Choose Bus --</option>
-                  {buses.map(b => <option key={b.id} value={b.id}>{b.bus_number}</option>)}
-                </select>
-              ) : (
-                <div className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl text-center text-slate-500 font-medium">
-                  No buses for you right now. Ask admin.
-                </div>
-              )}
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Select Bus</label>
+              <select 
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl text-lg outline-none focus:ring-2 focus:ring-[#1D3557]/30 transition-all font-bold text-slate-700"
+                value={selectedBus} onChange={(e) => { setSelectedBus(e.target.value); setError(''); }}
+              >
+                <option value="" className="font-normal text-slate-500">-- Select Bus --</option>
+                {buses.map(b => <option key={b.id} value={b.id}>{b.bus_number}</option>)}
+              </select>
             </div>
             
             <button 
-              disabled={buses.length === 0}
               onClick={startTracking}
-              className={`w-full ${buses.length === 0 ? 'bg-slate-300' : 'bg-[#1D3557] hover:bg-[#457B9D]'} text-white font-bold py-4 px-4 rounded-xl transition-all shadow-xl shadow-[#1D3557]/20 active:scale-95 text-lg flex justify-center items-center gap-2 group`}
+              className="w-full bg-[#1D3557] hover:bg-[#457B9D] text-white font-bold py-4 px-4 rounded-xl transition-all shadow-xl shadow-[#1D3557]/20 active:scale-95 text-lg flex justify-center items-center gap-2 group"
             >
-              Start Driving <span className="group-hover:translate-x-1 transition-transform">→</span>
+              Start Trip <span className="group-hover:translate-x-1 transition-transform">→</span>
             </button>
           </div>
         ) : (
@@ -138,16 +127,13 @@ export default function DriverDashboard({ user }) {
 
             <div className="text-center space-y-2">
               <h3 className="font-bold text-xl text-[#E63946] bg-[#E63946]/10 px-4 py-1.5 rounded-full inline-block">SHARING LOCATION</h3>
-              <p className="text-sm text-slate-500 font-medium">Students can see your bus now on the map.</p>
+              <p className="text-sm text-slate-500 font-medium">Your location is live for students on the map.</p>
             </div>
             
             {location ? (
-              <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-row font-mono text-[11px] sm:text-xs text-slate-600 justify-between items-center text-center">
-                <div className="flex flex-col flex-1"><span className="text-slate-400 font-sans uppercase font-bold text-[9px] sm:text-[10px]">Latitude</span>{location.lat.toFixed(6)}</div>
-                <div className="w-px h-8 bg-slate-200 mx-1"></div>
-                <div className="flex flex-col flex-1"><span className="text-slate-400 font-sans uppercase font-bold text-[9px] sm:text-[10px]">Longitude</span>{location.lng.toFixed(6)}</div>
-                <div className="w-px h-8 bg-slate-200 mx-1"></div>
-                <div className="flex flex-col flex-1"><span className="text-slate-400 font-sans uppercase font-bold text-[9px] sm:text-[10px]">Accuracy</span>±{location.accuracy?.toFixed(0) || 0}m</div>
+              <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-between font-mono text-xs text-slate-600">
+                <div className="flex flex-col"><span className="text-slate-400 font-sans uppercase font-bold text-[10px]">Latitude</span>{location.lat.toFixed(6)}</div>
+                <div className="flex flex-col items-end"><span className="text-slate-400 font-sans uppercase font-bold text-[10px]">Longitude</span>{location.lng.toFixed(6)}</div>
               </div>
             ) : (
               <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 text-center text-sm font-medium text-slate-500 animate-pulse">
@@ -159,7 +145,7 @@ export default function DriverDashboard({ user }) {
               onClick={stopTracking}
               className="w-full border-2 border-[#E63946] text-[#E63946] hover:bg-[#E63946]/5 font-bold py-4 px-4 rounded-xl transition-all active:scale-95 text-lg"
             >
-              Stop Driving
+              Stop Trip
             </button>
           </div>
         )}

@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_bts_key_123';
 
-const authRouter = (db) => {
+module.exports = function(db) {
   const router = express.Router();
 
   // Basic signup for Students and Drivers (Admin is seeded or added manually)
@@ -15,17 +15,12 @@ const authRouter = (db) => {
       return res.status(400).json({ error: 'All fields required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 4) {
+      return res.status(400).json({ error: 'Password must be at least 4 characters' });
     }
 
     if (!['Student', 'Driver'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role for registration' });
-    }
-
-    const driverSecret = process.env.DRIVER_SECRET_CODE || 'VVITBUS2026';
-    if (role === 'Driver' && req.body.driverCode !== driverSecret) {
-      return res.status(403).json({ error: 'Valid driver code required' });
     }
 
     try {
@@ -63,5 +58,4 @@ const authRouter = (db) => {
   return router;
 };
 
-module.exports = authRouter;
 module.exports.JWT_SECRET = JWT_SECRET;

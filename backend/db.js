@@ -9,7 +9,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error('Error opening database', err.message);
   } else {
     console.log('Connected to the SQLite database.');
-    db.run("PRAGMA foreign_keys = ON");
     
     // Create Tables
     db.run(`CREATE TABLE IF NOT EXISTS Users (
@@ -23,21 +22,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
         // Seed Admin User
         db.get("SELECT COUNT(*) as count FROM Users WHERE role = 'Admin'", async (err, row) => {
           if (row.count === 0) {
-            const adminPass = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123';
-            const hash = await bcrypt.hash(adminPass, 10);
+            const hash = await bcrypt.hash('admin123', 10);
             db.run("INSERT INTO Users (name, email, password, role) VALUES ('Admin User', 'admin@bts.com', ?, 'Admin')", [hash]);
-            console.log("Seeded default Admin user (admin@bts.com)");
+            console.log("Seeded default Admin user (admin@bts.com / admin123)");
           }
         });
       }
     });
-
-    db.run(`CREATE TABLE IF NOT EXISTS Routes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      start_origin TEXT,
-      end_destination TEXT
-    )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS Buses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,6 +38,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
       capacity INTEGER,
       FOREIGN KEY (driver_id) REFERENCES Users(id),
       FOREIGN KEY (route_id) REFERENCES Routes(id)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS Routes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      start_origin TEXT,
+      end_destination TEXT
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS Stops (

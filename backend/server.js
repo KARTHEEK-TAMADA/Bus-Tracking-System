@@ -1,24 +1,15 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
-const rateLimit = require('express-rate-limit');
 
 const app = express();
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+app.use(cors());
 app.use(express.json());
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: 'Too many requests, please try again later.' }
-});
-app.use('/api', apiLimiter);
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: process.env.FRONTEND_URL || '*' }
+  cors: { origin: '*' }
 });
 
 // Import DB
@@ -38,40 +29,37 @@ io.on('connection', (socket) => {
       driverSockets.set(driverId, { socketId: socket.id, busId });
       socketToDriver.set(socket.id, driverId);
       console.log(`Driver ${driverId} started trip for bus ${busId}`);
-      // Notify everyone that the bus is now live
-      io.emit('bus_location_update', { busId, status: 'live' });
     }
   });
 
   // Driver sends live location
   socket.on('driver_update_location', (data) => {
     const { driverId, busId, lat, lng } = data;
-
+    
     // Broadcast to all clients (Students & Admins)
     io.emit('bus_location_update', { busId, lat, lng, timestamp: Date.now() });
+
+    // Optional: Log to DB occasionally (not every second to save writes)
+    // db.run("INSERT INTO Bus_Location (bus_id, latitude, longitude) VALUES (?, ?, ?)", [busId, lat, lng]);
   });
 
-  const handleStopTrip = (socketId) => {
-    const driverId = socketToDriver.get(socketId);
-    if (driverId) {
-      const session = driverSockets.get(driverId);
-      if (session) {
-        // Broadcast that the trip has ended
-        io.emit('bus_location_update', { busId: session.busId, status: 'ended' });
-        driverSockets.delete(driverId);
-      }
-      socketToDriver.delete(socketId);
-      console.log(`Driver ${driverId} trip session cleaned up`);
-    }
-  };
-
   socket.on('driver_stop_trip', () => {
-    handleStopTrip(socket.id);
+    const driverId = socketToDriver.get(socket.id);
+    if (driverId) {
+      driverSockets.delete(driverId);
+      socketToDriver.delete(socket.id);
+      console.log(`Driver ${driverId} stopped trip`);
+    }
   });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
-    handleStopTrip(socket.id);
+    const driverId = socketToDriver.get(socket.id);
+    if (driverId) {
+      driverSockets.delete(driverId);
+      socketToDriver.delete(socket.id);
+      console.log(`Driver ${driverId} disconnected`);
+    }
   });
 });
 
